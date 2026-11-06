@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scratch Number Challenge</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f4f6fb;--card:#fff;--text:#1d2433;--muted:#5d6678;--accent:#3776ab;--accent2:#ffd43b;--ok:#2e9e5b;--bad:#d64545;--line:#d9deea}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141d;--card:#1a2030;--text:#eef1f8;--muted:#a3adc2;--accent:#5fa0d6;--accent2:#ffd43b;--ok:#3cc277;--bad:#ef6a6a;--line:#2b3348}}
+:root[data-theme="dark"]{--bg:#10141d;--card:#1a2030;--text:#eef1f8;--muted:#a3adc2;--accent:#5fa0d6;--accent2:#ffd43b;--ok:#3cc277;--bad:#ef6a6a;--line:#2b3348}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:20px 16px 40px}
+header{text-align:center;margin-bottom:16px}
+h1{margin:0 0 4px;font-size:clamp(24px,5vw,38px)}
+h1 span{color:var(--accent)}
+.sub{color:var(--muted);margin:0}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 16px;margin:16px 0;font-weight:600;flex-wrap:wrap}
+.bar b{color:var(--accent)}
+button{font:inherit;cursor:pointer}
+.reset{background:none;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:6px 14px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.tile{aspect-ratio:1;border:none;border-radius:16px;background:var(--c,var(--accent));color:#fff;font-size:clamp(26px,7vw,48px);font-weight:800;box-shadow:0 4px 0 rgba(0,0,0,.2);transition:transform .12s}
+.tile:hover:not(:disabled){transform:translateY(-3px) scale(1.04)}
+.tile:disabled{cursor:default;box-shadow:none}
+.tile.ok{background:var(--ok)}
+.tile.bad{background:var(--bad)}
+.overlay{position:fixed;inset:0;background:rgba(10,14,24,.65);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
+.overlay.show{display:flex}
+.modal{background:var(--card);border-radius:20px;max-width:640px;width:100%;max-height:92vh;overflow:auto;padding:22px;border-top:8px solid var(--accent2)}
+.tag{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;padding:3px 12px;font-size:13px;font-weight:600;margin-left:8px}
+.qn{font-size:15px;color:var(--muted);font-weight:700}
+.q{font-size:clamp(19px,4vw,25px);font-weight:700;margin:12px 0 16px;line-height:1.35}
+code{background:var(--bg);border:1px solid var(--line);padding:1px 6px;border-radius:6px;font-family:Consolas,monospace}
+.opt{display:block;width:100%;text-align:left;background:var(--bg);color:var(--text);border:2px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:clamp(16px,3.5vw,20px)}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 20%,var(--card))}
+.opt.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 20%,var(--card))}
+.fb{margin-top:6px;font-weight:600;min-height:24px}
+.go{margin-top:10px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:10px 24px;font-weight:700;display:none}
+.final{text-align:center}
+.final .big{font-size:56px;font-weight:800;color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🐱 Scratch <span>Number Challenge</span></h1>
+    <p class="sub">Unit 1 · Scratch: Lesson 1 &amp; Lesson 2 — pick a number to reveal your question!</p>
+  </header>
+  <div class="bar">
+    <div>Score: <b id="score">0</b> / 20</div>
+    <div>Answered: <b id="done">0</b> / 20</div>
+    <button class="reset" id="reset">↻ New game</button>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="overlay" id="ov"><div class="modal" id="modal"></div></div>
+
+<script>
+const Q = [
+ // Lesson 1 – Scratch and its Interface (3 questions from the lesson file + 7 easy)
+ {l:"L1",q:"Which of the following is NOT true about Scratch?",o:["It is free software;","Each block is an instruction in Scratch;","It is impossible to connect blocks in Scratch;","It is used for animations."],a:2},
+ {l:"L1",q:"Which block category changes sprite size?",o:["Motion","Sound","Looks","Events"],a:2},
+ {l:"L1",q:"What happens if you set size to a value greater than 100 using the <code>set size to</code> block?",o:["The sprite shrinks","The sprite grows larger","The sprite rotates","The sprite disappears"],a:1},
+ {l:"L1",q:"Scratch uses colorful ______ to build programs.",o:["Blocks","Pencils","Cables","Books"],a:0},
+ {l:"L1",q:"A Sprite is a ______ that you can program.",o:["Character","Keyboard","Mouse","Folder"],a:0},
+ {l:"L1",q:"Where does the action happen in Scratch?",o:["The Stage","The Toolbox","The Menu","The Keyboard"],a:0},
+ {l:"L1",q:"Where do you build your code in Scratch?",o:["The Code area","The Stage","The Mouse","The Printer"],a:0},
+ {l:"L1",q:"What can you create with Scratch?",o:["Stories, games and animations","Only text documents","Only spreadsheets","Only emails"],a:0},
+ {l:"L1",q:"Setting the size to 100 makes the sprite…",o:["Return to its normal size","Disappear","Grow very large","Turn around"],a:0},
+ {l:"L1",q:"Scratch is a ______ coding language.",o:["Block-based","Text-based","Paper-based","Water-based"],a:0},
+ // Lesson 2 – Save and Share (4 questions from the lesson file + 6 easy)
+ {l:"L2",q:"In which category can you find the <code>Move 10 steps</code> block in Scratch?",o:["Motion","Event","Looks","Sound"],a:0},
+ {l:"L2",q:"What happens when you click the green flag in a Scratch program?",o:["The program stops running.","The script associated with the <code>when green flag clicked</code> block starts executing.","The script disappears.","The background changes."],a:1},
+ {l:"L2",q:"What is the file extension of a Scratch project saved offline?",o:[".sb",".scratch",".sb3",".spt"],a:2},
+ {l:"L2",q:"What is the purpose of the Load from your computer option in the File menu?",o:["To download the current project to your device","To upload a project to the Scratch community","To open a previously saved Scratch project file","To save a project to a specific folder"],a:2},
+ {l:"L2",q:"Why do we save our Scratch project?",o:["So our work is not lost","To make the sprite bigger","To change the Stage","To turn off the computer"],a:0},
+ {l:"L2",q:"Scratch lets you save your programs…",o:["Online or offline","Only on paper","Only in a book","Never"],a:0},
+ {l:"L2",q:"Which button do you click to name your project?",o:["Edit","Print","Shut down","Draw"],a:0},
+ {l:"L2",q:"Where can you see all your saved projects?",o:["My Projects","The Stage","Looks","Sound"],a:0},
+ {l:"L2",q:"To save a project on your computer, click the File icon, then…",o:["Save to your computer","Delete project","Change size","Say Hello"],a:0},
+ {l:"L2",q:"What kind of names should we give to our project files?",o:["Descriptive names","Random words","Inappropriate words","No name at all"],a:0}
+];
+
+let order, state, score, done;
+const $ = id => document.getElementById(id);
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+function start(){
+  order = shuffle(Q.map((_,i)=>i));   // tile n -> question order[n]
+  state = Array(20).fill(null);
+  score = 0; done = 0;
+  const g = $("grid"); g.innerHTML = "";
+  for (let n=0;n<20;n++){
+    const b = document.createElement("button");
+    b.className = "tile"; b.textContent = n+1; b.id = "t"+n;
+    b.style.setProperty("--c", "hsl(" + Math.round((n*137.5)%360) + ",65%,40%)");
+    b.onclick = () => openQ(n);
+    g.appendChild(b);
+  }
+  update(); $("ov").classList.remove("show");
+}
+function update(){ $("score").textContent = score; $("done").textContent = done; }
+
+function openQ(n){
+  const item = Q[order[n]];
+  const opts = shuffle(item.o.map((t,i)=>({t,c:i===item.a})));
+  const m = $("modal");
+  m.innerHTML = `<div class="qn">Question ${n+1}<span class="tag">${item.l==="L1"?"Lesson 1":"Lesson 2"}</span></div>
+    <div class="q">${item.q}</div><div id="opts"></div><div class="fb" id="fb"></div>
+    <button class="go" id="go">Back to numbers ➜</button>`;
+  const box = m.querySelector("#opts");
+  opts.forEach(o=>{
+    const b = document.createElement("button");
+    b.className = "opt"; b.innerHTML = o.t;
+    b.onclick = () => {
+      const right = o.c;
+      box.querySelectorAll(".opt").forEach((x,i)=>{ x.disabled = true; if (opts[i].c) x.classList.add("ok"); });
+      if (!right) b.classList.add("bad");
+      state[n] = right; done++; if (right) score++;
+      const t = $("t"+n); t.disabled = true; t.classList.add(right?"ok":"bad"); t.textContent = right?"✓":"✗";
+      $("fb").textContent = right ? "🎉 Correct! +1 point" : "❌ Not quite — the correct answer is highlighted.";
+      $("fb").style.color = right ? "var(--ok)" : "var(--bad)";
+      update();
+      const go = $("go"); go.style.display = "inline-block";
+      go.onclick = () => { $("ov").classList.remove("show"); if (done===20) finish(); };
+    };
+    box.appendChild(b);
+  });
+  $("ov").classList.add("show");
+}
+
+function finish(){
+  const pct = Math.round(score/20*100);
+  const msg = pct>=90 ? "🏆 Scratch Master!" : pct>=70 ? "🌟 Great job!" : pct>=50 ? "👍 Good effort — keep practicing!" : "💪 Review the lessons and try again!";
+  $("modal").innerHTML = `<div class="final"><div style="font-size:48px">🐱</div><h2>${msg}</h2>
+    <div class="big">${score} / 20</div><p class="sub">${pct}% correct</p>
+    <button class="go" style="display:inline-block" id="again">Play again ↻</button></div>`;
+  $("again").onclick = start;
+  $("ov").classList.add("show");
+}
+$("reset").onclick = start;
+start();
+</script>
+</body>
+</html>
